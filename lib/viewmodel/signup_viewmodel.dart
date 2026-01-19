@@ -19,6 +19,7 @@ class SignupViewModel extends ChangeNotifier {
         email: email,
         password: password,
         role: role,
+        isDoctor: role == 'doctor',
       );
       return user;
     } catch (e) {

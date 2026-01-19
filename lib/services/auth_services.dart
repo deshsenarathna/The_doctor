@@ -11,6 +11,7 @@ class AuthService {
     required String email,
     required String password,
     required String role,
+    required bool isDoctor,
   }) async {
     try {
       UserCredential cred = await _auth.createUserWithEmailAndPassword(
@@ -31,6 +32,7 @@ class AuthService {
         phone: '',
         role: role,
         uid: uid,
+        isDoctor: isDoctor,
       );
     } catch (_) {
       return null;
@@ -61,6 +63,7 @@ class AuthService {
         phone: data['phone'] ?? '',
         role: data['role'] ?? '',
         uid: uid,
+        isDoctor: data['role'] == 'doctor',
       );
     } catch (_) {
       return null;

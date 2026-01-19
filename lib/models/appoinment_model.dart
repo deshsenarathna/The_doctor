@@ -7,6 +7,7 @@ class Appointment {
   final String gender;
   final String phone;
   final DateTime date;
+  final String sessionId;
   AppointmentStatus status;
 
   Appointment({
@@ -16,6 +17,7 @@ class Appointment {
     required this.gender,
     required this.phone,
     required this.date,
+    this.sessionId = '',
     this.status = AppointmentStatus.pending,
   });
 }

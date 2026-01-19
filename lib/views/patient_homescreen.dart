@@ -1,50 +1,23 @@
 import 'package:flutter/material.dart';
-import '../../models/appoinment_model.dart';
-import '../../widgets/appoinment_card.dart';
+import 'package:provider/provider.dart';
+import '../viewmodel/appoinment_viewmodel.dart';
 import 'patient/book_appoinment.dart';
+import '../widgets/appoinment_card.dart';
 
 class PatientHomeScreen extends StatelessWidget {
-  const PatientHomeScreen({super.key});
+  final String patientPhone; // REQUIRED
+
+  const PatientHomeScreen({super.key, required this.patientPhone});
 
   @override
   Widget build(BuildContext context) {
-    // TEMP data
-    final List<Appointment> myAppointments = [
-      Appointment(
-        appointmentNumber: 1,
-        patientName: 'John Doe',
-        age: 30,
-        gender: 'Male',
-        phone: '0712345678',
-        date: DateTime.now().subtract(const Duration(minutes: 30)),
-        status: AppointmentStatus.completed,
-      ),
-      Appointment(
-        appointmentNumber: 2,
-        patientName: 'Jane Perera',
-        age: 25,
-        gender: 'Female',
-        phone: '0771234567',
-        date: DateTime.now().add(const Duration(minutes: 10)),
-        status: AppointmentStatus.pending,
-      ),
-      Appointment(
-        appointmentNumber: 3,
-        patientName: 'Kamal Silva',
-        age: 40,
-        gender: 'Male',
-        phone: '0719876543',
-        date: DateTime.now().add(const Duration(minutes: 20)),
-        status: AppointmentStatus.pending,
-      ),
-    ];
+    final vm = Provider.of<AppointmentViewModel>(context);
 
-    // Current ongoing number
-    final pendingAppointments =
-        myAppointments.where((a) => a.status == AppointmentStatus.pending).toList();
+    // Get today's appointment for this patient
+    final appointment = vm.getTodayAppointment(patientPhone);
 
     final int? currentOngoingNumber =
-        pendingAppointments.isNotEmpty ? pendingAppointments.first.appointmentNumber : null;
+        appointment != null ? appointment.appointmentNumber : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -71,7 +44,9 @@ class PatientHomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const BookAppointmentScreen(),
+                      builder: (_) => BookAppointmentScreen(
+                        patientPhone: patientPhone,
+                      ),
                     ),
                   );
                 },
@@ -81,23 +56,14 @@ class PatientHomeScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
             const Text(
-              'My Appointments',
+              'My Appointment',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
 
-            Expanded(
-              child: myAppointments.isEmpty
-                  ? const Center(child: Text('No appointments yet'))
-                  : ListView.builder(
-                      itemCount: myAppointments.length,
-                      itemBuilder: (context, index) {
-                        return AppointmentCard(
-                          appointment: myAppointments[index],
-                        );
-                      },
-                    ),
-            ),
+            appointment == null
+                ? const Text('No appointment yet')
+                : AppointmentCard(appointment: appointment),
           ],
         ),
       ),

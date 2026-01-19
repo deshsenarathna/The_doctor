@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/appoinment_model.dart';  // Corrected import
+import '../models/appoinment_model.dart';
 
 class AppointmentViewModel extends ChangeNotifier {
   final List<Appointment> _appointments = [];
 
   List<Appointment> get appointments => _appointments;
 
-  /// Current ongoing number (doctor side logic)
   int get currentOngoingNumber {
     final completedCount =
         _appointments.where((a) => a.status == AppointmentStatus.completed).length;
@@ -37,9 +36,7 @@ class AppointmentViewModel extends ChangeNotifier {
     final today = DateTime.now();
 
     final existing = getTodayAppointment(phone);
-    if (existing != null) {
-      return existing;
-    }
+    if (existing != null) return existing;
 
     final todayAppointments = _appointments.where(
       (a) =>

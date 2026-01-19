@@ -3,8 +3,9 @@ import '../models/appoinment_model.dart';
 
 class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
+  final VoidCallback? onMarkCompleted;
 
-  const AppointmentCard({super.key, required this.appointment});
+  const AppointmentCard({super.key, required this.appointment, this.onMarkCompleted});
 
   @override
   Widget build(BuildContext context) {
@@ -21,19 +22,16 @@ class AppointmentCard extends StatelessWidget {
           ),
         ),
         title: Text(
-          'Appointment No ${appointment.appointmentNumber}',
+          'Appointment No ${appointment.appointmentNumber} - ${appointment.patientName}',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          appointment.date.toString(),
-        ),
-        trailing: Text(
-          isCompleted ? 'Completed' : 'Pending',
-          style: TextStyle(
-            color: isCompleted ? Colors.green : Colors.orange,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        subtitle: Text('Age: ${appointment.age}, Gender: ${appointment.gender}\nPhone: ${appointment.phone}'),
+        trailing: isCompleted
+            ? const Text('Completed', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
+            : ElevatedButton(
+                onPressed: onMarkCompleted,
+                child: const Text('Mark Completed'),
+              ),
       ),
     );
   }

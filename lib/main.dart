@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-
+import 'package:provider/provider.dart';
+import 'viewmodel/appoinment_viewmodel.dart';
 import 'views/login_screen.dart';
 import 'views/signup_screen.dart';
-import 'views/patient_homescreen.dart';
 import 'viewmodel/login_viewmodel.dart';
 import 'viewmodel/signup_viewmodel.dart';
-import 'viewmodel/patient_home_viewmodel.dart';
+import 'views/doctor_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,9 +21,9 @@ class DocApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => LoginViewModel()),
-        ChangeNotifierProvider(create: (_) => SignupViewModel()),
-        ChangeNotifierProvider(create: (_) => PatientHomeViewModel()),
+        ChangeNotifierProvider(create: (_) => AppointmentViewModel()),
+        ChangeNotifierProvider(create:  (_) => LoginViewModel()),
+        ChangeNotifierProvider(create:  (_) => SignupViewModel()),
       ],
       child: MaterialApp(
         title: 'HealthCare',
@@ -34,11 +33,10 @@ class DocApp extends StatelessWidget {
         ),
         initialRoute: '/login',
         routes: {
-          
           '/login': (_) => const LoginScreen(),
           '/signup': (_) => const SignupScreen(),
-          '/patientHome': (_) => const PatientHomeScreen(),
-          
+          '/doctor_home': (_) => const DoctorHomeScreen(doctorEmail: ''),
+          // PatientHomeScreen requires patientPhone, use Navigator.push instead
         },
         debugShowCheckedModeBanner: false,
       ),
