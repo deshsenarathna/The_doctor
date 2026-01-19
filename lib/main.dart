@@ -30,7 +30,9 @@ class DocApp extends StatelessWidget {
       child: MaterialApp(
         title: 'HealthCare',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
+          scaffoldBackgroundColor: const Color(0xFFEAF6FF), // light blue background
+          appBarTheme: const AppBarTheme(centerTitle: true),
           useMaterial3: true,
         ),
         initialRoute: '/login',

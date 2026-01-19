@@ -130,7 +130,7 @@ class PatientHomeScreen extends StatelessWidget {
             const SizedBox(height: 10),
             myNextAppointment == null
               ? const Text('No appointment yet')
-              : _attractiveMyAppointmentCard(myNextAppointment as Appointment, sessionVM),
+              : _attractiveMyAppointmentCard(context, myNextAppointment, sessionVM),
           ],
         ),
       ),
@@ -168,7 +168,7 @@ class PatientHomeScreen extends StatelessWidget {
 
   // Old simple card removed; using attractive gradient card below
 
-  Widget _attractiveMyAppointmentCard(Appointment app, dynamic sessionVM) {
+  Widget _attractiveMyAppointmentCard(BuildContext context, Appointment app, dynamic sessionVM) {
     final matching = sessionVM.sessions.where((s) => s.id == app.sessionId);
     final sessionName = matching.isNotEmpty ? matching.first.name : 'Session';
     final dateStr = app.date.toLocal().toString().split(' ').first;
@@ -191,8 +191,11 @@ class PatientHomeScreen extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
           CircleAvatar(
             radius: 26,
             backgroundColor: Colors.white,
@@ -248,6 +251,55 @@ class PatientHomeScreen extends StatelessWidget {
               ],
             ),
           )
+            ],
+          ),
+          if (!isCompleted) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.redAccent.withOpacity(0.2),
+                ),
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Cancel Appointment'),
+                      content: const Text('Are you sure you want to cancel this appointment?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('No'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Yes, Cancel'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    final appointmentVM = Provider.of<AppointmentViewModel>(context, listen: false);
+                    await appointmentVM.deleteAppointmentByPatient(
+                      sessionId: app.sessionId,
+                      phone: app.phone,
+                      appointmentNumber: app.appointmentNumber,
+                      date: app.date,
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Appointment cancelled')),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.delete_forever),
+                label: const Text('Cancel Appointment'),
+              ),
+            ),
+          ],
         ],
       ),
     );

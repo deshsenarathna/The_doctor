@@ -6,6 +6,7 @@ import '../models/session_model.dart';
 import '../models/appoinment_model.dart';
 import '../viewmodel/session_view_model.dart';
 import '../viewmodel/appoinment_viewmodel.dart';
+import '../viewmodel/login_viewmodel.dart';
 
 class DoctorHomeScreen extends StatelessWidget {
   final String doctorEmail;

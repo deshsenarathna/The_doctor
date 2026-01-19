@@ -190,6 +190,52 @@ class AppointmentViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteAppointmentByPatient({
+    required String sessionId,
+    required String phone,
+    required int appointmentNumber,
+    required DateTime date,
+  }) async {
+    try {
+      // Query narrow set by session + phone to avoid composite index needs
+      final snap = await _db
+          .collection('appointments')
+          .where('sessionId', isEqualTo: sessionId)
+          .where('phone', isEqualTo: phone)
+          .get();
+
+      bool sameDay(DateTime a, DateTime b) =>
+          a.year == b.year && a.month == b.month && a.day == b.day;
+
+      String? targetId;
+      for (final d in snap.docs) {
+        final data = d.data();
+        final num = data['appointmentNumber'] as int?;
+        final ts = data['date'] as Timestamp?;
+        if (num == appointmentNumber && ts != null && sameDay(ts.toDate(), date)) {
+          targetId = d.id;
+          break;
+        }
+      }
+
+      if (targetId != null) {
+        await _db.collection('appointments').doc(targetId).delete();
+      }
+    } catch (_) {
+      // silent fail; listener will reflect eventual state
+    }
+
+    // Update local cache for immediate UI feedback
+    bool sameDay(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
+    _appointments.removeWhere((a) =>
+        a.sessionId == sessionId &&
+        a.phone == phone &&
+        a.appointmentNumber == appointmentNumber &&
+        sameDay(a.date, date));
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _subscription?.cancel();

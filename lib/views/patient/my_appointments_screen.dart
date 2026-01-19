@@ -39,6 +39,7 @@ class MyAppointmentsScreen extends StatelessWidget {
               itemBuilder: (context, i) {
                 final app = myAppointments[i];
                 final dateStr = app.date.toLocal().toString().split(' ').first;
+                final isPending = app.status == AppointmentStatus.pending;
                 return Card(
                   child: ListTile(
                     leading: CircleAvatar(
@@ -53,10 +54,47 @@ class MyAppointmentsScreen extends StatelessWidget {
                     subtitle: Text(
                       'Name: ${app.patientName}\nAge: ${app.age}, Gender: ${app.gender}\nPhone: ${app.phone}',
                     ),
-                    trailing: Text(
-                      statusText(app.status),
-                      style: TextStyle(color: statusColor(app.status), fontWeight: FontWeight.w600),
-                    ),
+                    trailing: isPending
+                        ? IconButton(
+                            tooltip: 'Cancel appointment',
+                            icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Cancel Appointment'),
+                                  content: const Text('Are you sure you want to cancel this appointment?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text('No'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Yes, Cancel'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed == true) {
+                                await appointmentVM.deleteAppointmentByPatient(
+                                  sessionId: app.sessionId,
+                                  phone: app.phone,
+                                  appointmentNumber: app.appointmentNumber,
+                                  date: app.date,
+                                );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Appointment cancelled')),
+                                  );
+                                }
+                              }
+                            },
+                          )
+                        : Text(
+                            statusText(app.status),
+                            style: TextStyle(color: statusColor(app.status), fontWeight: FontWeight.w600),
+                          ),
                   ),
                 );
               },
