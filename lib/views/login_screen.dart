@@ -66,16 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => DoctorHomeScreen(doctorEmail: user.email!),
+                                  builder: (_) => DoctorHomeScreen(doctorEmail: user.email),
                                 ),
                               );
                             } else {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => PatientHomeScreen(
-                                    patientPhone: user.phone!,
-                                  ),
+                                  builder: (_) => PatientHomeScreen(patientPhone: user.phone),
                                 ),
                               );
                             }
@@ -84,6 +82,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Login'),
                       ),
                     ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Don't have an account?"),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/signup');
+                    },
+                    child: const Text('Sign up'),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'login_screen.dart';
+import 'patient_homescreen.dart';
+import 'doctor_home_screen.dart';
 import '../viewmodel/signup_viewmodel.dart';
 
 enum UserType { patient, doctor }
@@ -15,12 +18,14 @@ class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();
   UserType selectedRole = UserType.patient;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -76,6 +81,22 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Phone
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Enter phone number';
+                    if (v.length < 9) return 'Enter a valid phone number';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
                 // Role selector
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -105,14 +126,29 @@ class _SignupScreenState extends State<SignupScreen> {
                               email: _emailController.text.trim(),
                               password: _passwordController.text.trim(),
                               role: selectedRole == UserType.patient ? 'patient' : 'doctor',
+                              phone: _phoneController.text.trim(),
                             );
 
                             if (user != null) {
                               // Navigate based on role
                               if (user.role == 'patient') {
-                                Navigator.pushReplacementNamed(context, '/patientHome');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PatientHomeScreen(
+                                      patientPhone: user.phone,
+                                    ),
+                                  ),
+                                );
                               } else {
-                                Navigator.pushReplacementNamed(context, '/doctorHome');
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DoctorHomeScreen(
+                                      doctorEmail: user.email,
+                                    ),
+                                  ),
+                                );
                               }
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(

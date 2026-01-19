@@ -10,6 +10,7 @@ class SignupViewModel extends ChangeNotifier {
     required String email,
     required String password,
     required String role,
+    required String phone,
   }) async {
     isLoading = true;
     notifyListeners();
@@ -20,6 +21,7 @@ class SignupViewModel extends ChangeNotifier {
         password: password,
         role: role,
         isDoctor: role == 'doctor',
+        phone: phone,
       );
       return user;
     } catch (e) {

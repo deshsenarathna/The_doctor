@@ -12,6 +12,7 @@ class AuthService {
     required String password,
     required String role,
     required bool isDoctor,
+    required String phone,
   }) async {
     try {
       UserCredential cred = await _auth.createUserWithEmailAndPassword(
@@ -24,12 +25,12 @@ class AuthService {
       await _db.collection('users').doc(uid).set({
         'email': email,
         'role': role,
-        'phone': '',
+        'phone': phone,
       });
 
       return UserModel(
         email: email,
-        phone: '',
+        phone: phone,
         role: role,
         uid: uid,
         isDoctor: isDoctor,

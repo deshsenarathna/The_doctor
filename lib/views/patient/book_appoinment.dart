@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodel/appoinment_viewmodel.dart';
+import '../../viewmodel/session_view_model.dart';
+import '../../models/session_model.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
-  final String patientPhone; // REQUIRED
+  final String patientPhone;
 
   const BookAppointmentScreen({super.key, required this.patientPhone});
 
@@ -16,17 +18,14 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   String _gender = 'Male';
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _ageController.dispose();
-    super.dispose();
-  }
+  Session? _selectedSession;
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<AppointmentViewModel>(context, listen: false);
+    final appointmentVM = Provider.of<AppointmentViewModel>(context, listen: false);
+    final sessionVM = Provider.of<SessionViewModel>(context);
+
+    final activeSessions = sessionVM.activeSessions();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Book Appointment')),
@@ -36,13 +35,35 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _label('Patient Name'),
-              _field(_nameController, 'Enter name'),
+              DropdownButtonFormField<Session>(
+                value: _selectedSession,
+                items: activeSessions.map((s) => DropdownMenuItem(
+                  value: s,
+                  child: Text('${s.name} • ${s.date.toLocal().toString().split(' ')[0]}'),
+                )).toList(),
+                onChanged: (s) => setState(() => _selectedSession = s),
+                decoration: InputDecoration(
+                  labelText: 'Select Session',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                validator: (s) => s == null ? 'Select a session' : null,
+              ),
               const SizedBox(height: 16),
-              _label('Age'),
-              _field(_ageController, 'Enter age', keyboard: TextInputType.number),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Patient Name'),
+                validator: (v) => v == null || v.isEmpty ? 'Enter name' : null,
+              ),
               const SizedBox(height: 16),
-              _label('Gender'),
+              TextFormField(
+                controller: _ageController,
+                decoration: const InputDecoration(labelText: 'Age'),
+                keyboardType: TextInputType.number,
+                validator: (v) => v == null || v.isEmpty ? 'Enter age' : null,
+              ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _gender,
                 items: const [
@@ -50,70 +71,40 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                   DropdownMenuItem(value: 'Female', child: Text('Female')),
                 ],
                 onChanged: (v) => setState(() => _gender = v!),
-                decoration: _inputDecoration(),
+                decoration: const InputDecoration(labelText: 'Gender'),
               ),
               const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      final appointment = vm.bookAppointment(
-                        patientName: _nameController.text.trim(),
-                        age: int.parse(_ageController.text.trim()),
-                        gender: _gender,
-                        phone: widget.patientPhone,
-                      );
-
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('Appointment Confirmed'),
-                          content: Text(
-                            'Your appointment number is\n\nA${appointment.appointmentNumber}',
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context); // close dialog
-                                Navigator.pop(context); // go back to home
-                              },
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate() && _selectedSession != null) {
+                      try {
+                        final appointment = await appointmentVM.bookAppointment(
+                          patientName: _nameController.text.trim(),
+                          age: int.parse(_ageController.text.trim()),
+                          gender: _gender,
+                          phone: widget.patientPhone,
+                          sessionId: _selectedSession!.id,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Booked appointment No ${appointment.appointmentNumber}')),
+                        );
+                        Navigator.pop(context);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+                        );
+                      }
                     }
                   },
                   child: const Text('Confirm Booking'),
                 ),
-              )
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _label(String text) => Text(text, style: const TextStyle(fontWeight: FontWeight.w600));
-
-  Widget _field(TextEditingController controller, String hint,
-      {TextInputType keyboard = TextInputType.text}) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboard,
-      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-      decoration: _inputDecoration(hint),
-    );
-  }
-
-  InputDecoration _inputDecoration([String? hint]) {
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
     );
   }
 }

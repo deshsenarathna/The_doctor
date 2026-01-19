@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../models/session_model.dart';
 import '../models/appoinment_model.dart';
 import '../viewmodel/appoinment_viewmodel.dart';
+import '../viewmodel/session_view_model.dart';
 import 'package:provider/provider.dart';
 
 class DoctorHomeScreen extends StatefulWidget {
@@ -15,11 +16,15 @@ class DoctorHomeScreen extends StatefulWidget {
 }
 
 class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
-  final List<Session> _sessions = [];
 
   @override
   Widget build(BuildContext context) {
     final appointmentVM = Provider.of<AppointmentViewModel>(context);
+    final sessionVM = Provider.of<SessionViewModel>(context);
+    final doctorSessions = sessionVM.doctorSessions(widget.doctorEmail);
+
+    bool sameDay(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
 
     return Scaffold(
       appBar: AppBar(
@@ -57,24 +62,55 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
             const SizedBox(height: 10),
 
             Expanded(
-              child: _sessions.isEmpty
+              child: doctorSessions.isEmpty
                   ? const Center(child: Text('No sessions yet'))
                   : ListView.builder(
-                      itemCount: _sessions.length,
+                      itemCount: doctorSessions.length,
                       itemBuilder: (context, index) {
-                        final session = _sessions[index];
-                        // Filter appointments for this session
-                        final sessionAppointments = appointmentVM.appointments
-                            .where((a) => a.sessionId == session.id)
-                            .toList();
+                        final session = doctorSessions[index];
+
+                        // Filter today's appointments for this session
+                        final today = DateTime.now();
+                        final sessionApps = appointmentVM.appointments
+                            .where((a) => a.sessionId == session.id && sameDay(a.date, today))
+                            .toList()
+                          ..sort((a, b) => a.appointmentNumber.compareTo(b.appointmentNumber));
+
+                        final nowServing = appointmentVM.nowServingForSession(session.id, day: today);
+
+                        final hasNext = sessionApps.any((a) =>
+                          a.appointmentNumber == nowServing && a.status != AppointmentStatus.completed);
 
                         return Card(
                           child: ExpansionTile(
                             title: Text(session.name),
-                            subtitle: Text(
-                                'Date: ${session.date.toLocal().toString().split(' ')[0]} | Max Appointments: ${session.maxAppointments}'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    'Date: ${session.date.toLocal().toString().split(' ')[0]} | Max Appointments: ${session.maxAppointments}'),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.record_voice_over, size: 16, color: Colors.orange),
+                                    const SizedBox(width: 6),
+                                    Text('Now Serving: $nowServing',
+                                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                                    const Spacer(),
+                                    ElevatedButton(
+                                      onPressed: hasNext
+                                          ? () {
+                                              appointmentVM.markCompleted(session.id, nowServing);
+                                            }
+                                          : null,
+                                      child: const Text('Complete Next'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                             children: [
-                              sessionAppointments.isEmpty
+                              sessionApps.isEmpty
                                   ? const Padding(
                                       padding: EdgeInsets.all(8),
                                       child: Text('No appointments yet'),
@@ -82,25 +118,27 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                                   : ListView.builder(
                                       shrinkWrap: true,
                                       physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: sessionAppointments.length,
+                                      itemCount: sessionApps.length,
                                       itemBuilder: (context, i) {
-                                        final app = sessionAppointments[i];
+                                        final app = sessionApps[i];
+                                        final isCompleted = app.status == AppointmentStatus.completed;
                                         return ListTile(
                                           leading: CircleAvatar(
-                                            backgroundColor: app.status == AppointmentStatus.completed
-                                                ? Colors.green
-                                                : Colors.orange,
+                                            backgroundColor:
+                                                isCompleted ? Colors.green : (app.appointmentNumber == nowServing ? Colors.blue : Colors.orange),
                                             child: Text(app.appointmentNumber.toString(),
                                                 style: const TextStyle(color: Colors.white)),
                                           ),
                                           title: Text(app.patientName),
-                                          subtitle: Text(
-                                              '${app.date.hour}:${app.date.minute.toString().padLeft(2, '0')} | ${app.phone}'),
-                                          trailing: app.status == AppointmentStatus.completed
+                                          subtitle: Text('${app.phone}'),
+                                          trailing: isCompleted
                                               ? const Text('Completed', style: TextStyle(color: Colors.green))
                                               : ElevatedButton(
                                                   onPressed: () {
-                                                    appointmentVM.markCompleted(app.appointmentNumber);
+                                                    appointmentVM.markCompleted(
+                                                      session.id,
+                                                      app.appointmentNumber,
+                                                    );
                                                   },
                                                   child: const Text('Mark Completed'),
                                                 ),
@@ -120,6 +158,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
   }
 
   void _showStartSessionDialog(BuildContext context) {
+    final sessionVM = Provider.of<SessionViewModel>(context, listen: false);
     final _nameController = TextEditingController();
     final _maxController = TextEditingController();
     DateTime _selectedDate = DateTime.now();
@@ -179,14 +218,13 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                 final session = Session(
                   id: id,
                   name: _nameController.text.trim(),
-                  date: _selectedDate,
+                  date: DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day),
                   doctorEmail: widget.doctorEmail,
                   startTime: DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, _startTime.hour, _startTime.minute),
                   maxAppointments: int.tryParse(_maxController.text.trim()) ?? 10,
+                  isActive: true,
                 );
-                setState(() {
-                  _sessions.add(session);
-                });
+                sessionVM.startSession(session);
                 Navigator.pop(ctx);
               },
               child: const Text('Start')),

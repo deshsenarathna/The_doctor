@@ -28,10 +28,13 @@ class AppointmentCard extends StatelessWidget {
         subtitle: Text('Age: ${appointment.age}, Gender: ${appointment.gender}\nPhone: ${appointment.phone}'),
         trailing: isCompleted
             ? const Text('Completed', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
-            : ElevatedButton(
-                onPressed: onMarkCompleted,
-                child: const Text('Mark Completed'),
-              ),
+            : (onMarkCompleted != null
+                ? ElevatedButton(
+                    onPressed: onMarkCompleted,
+                    child: const Text('Mark Completed'),
+                  )
+                : const Text('Pending',
+                    style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold))),
       ),
     );
   }

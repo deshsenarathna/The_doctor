@@ -22,10 +22,10 @@ class DocApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AppointmentViewModel()),
+        ChangeNotifierProvider(create: (_) => AppointmentViewModel()..listenToAppointments()),
         ChangeNotifierProvider(create:  (_) => LoginViewModel()),
         ChangeNotifierProvider(create:  (_) => SignupViewModel()),
-        ChangeNotifierProvider(create: (_) => SessionViewModel()),
+        ChangeNotifierProvider(create: (_) => SessionViewModel()..fetchSessions()),
       ],
       child: MaterialApp(
         title: 'HealthCare',
