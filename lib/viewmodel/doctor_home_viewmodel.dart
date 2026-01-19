@@ -180,6 +180,7 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
                   id: id,
                   name: _nameController.text.trim(),
                   date: _selectedDate,
+                  doctorEmail: widget.doctorEmail,
                   startTime: DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, _startTime.hour, _startTime.minute),
                   maxAppointments: int.tryParse(_maxController.text.trim()) ?? 10,
                 );

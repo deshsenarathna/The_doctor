@@ -13,6 +13,7 @@ class AppointmentService {
         gender: 'Male',
         phone: '0712345678',
         date: DateTime.now().add(const Duration(days: 1)),
+        sessionId: 'session_001' ,
         status: AppointmentStatus.pending,
       ),
       Appointment(
@@ -22,6 +23,7 @@ class AppointmentService {
         gender: 'Female',
         phone: '0771234567',
         date: DateTime.now().add(const Duration(days: 3)),
+        sessionId: 'session_002' ,
         status: AppointmentStatus.pending,
       ),
     ];

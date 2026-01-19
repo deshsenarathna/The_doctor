@@ -53,6 +53,7 @@ class AppointmentViewModel extends ChangeNotifier {
       age: age,
       gender: gender,
       phone: phone,
+      sessionId: 'session_001',
       date: today,
     );
 

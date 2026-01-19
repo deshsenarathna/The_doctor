@@ -7,6 +7,7 @@ import 'views/signup_screen.dart';
 import 'viewmodel/login_viewmodel.dart';
 import 'viewmodel/signup_viewmodel.dart';
 import 'views/doctor_home_screen.dart';
+import 'viewmodel/session_view_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,7 @@ class DocApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppointmentViewModel()),
         ChangeNotifierProvider(create:  (_) => LoginViewModel()),
         ChangeNotifierProvider(create:  (_) => SignupViewModel()),
+        ChangeNotifierProvider(create: (_) => SessionViewModel()),
       ],
       child: MaterialApp(
         title: 'HealthCare',
